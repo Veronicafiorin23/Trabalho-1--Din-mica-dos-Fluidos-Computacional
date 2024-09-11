@@ -1,0 +1,127 @@
+
+syms x x1;
+
+% Entrada da função que será utilizada 
+f= input('digite sua função: '); 
+disp('A função f(x) é: ');
+pretty(f); 
+
+% Mostrar a derivada simbólica de f
+dgf = diff(f, x);
+disp('A derivada de f(x) é: ');
+pretty(dgf); % Exibe a expressão de maneira legível
+
+% Substituir a derivada em x por x1
+dgf_x1 = subs(dgf, x, x1);
+disp(dgf_x1); 
+
+valor_x1 = input('Digite valor para X: ');
+disp('O valor de x é: ');
+disp(valor_x1)
+
+dgf_exato1 = subs(dgf_x1, x1, valor_x1);
+disp('A resposta de f(x) com a substituição de x é: ');
+pretty(dgf_exato1);
+
+U = valor_x1;
+% Número de deltas Dx a serem considerados
+j = input('Digite a quantidade de deltas x: ');
+disp('A quantidade de deltas x é: ')
+disp(j)
+
+'------------------------------------------------------'
+
+% Inicializar arrays para armazenar Dx, der, e erro
+Dx = zeros(1, j);
+back = zeros(1, j);
+ford = zeros(1, j);
+g = zeros(1, j);
+gg = zeros(1, j);
+
+% Substituir x na função f por x1
+f_x1 = subs(f, x, x1);
+
+% Loop para calcular a derivada aproximada e o erro para cada Dx
+for i = 1:j
+    Dx(i) = input(sprintf("Digite o número de Dx%d: ", i));
+    
+    fprintf(' Valor de Dx%d é: %f\n',i, Dx(i))
+    
+    % Calcular Fi usando f_x1 com U como x1
+    Fi = subs(f_x1, x1, U);
+    
+    % Calcular U_i subtraindo Dx(i) de U
+    U_i = U - Dx(i);
+    
+    % Calcular Fi_i usando f_x1 com U_i como x1
+    Fi_i = subs(f_x1, x1, U_i);
+    
+    % Calcular U_ii somando Dx(i) de U
+    U_ii = U + Dx(i);
+    
+     % Calcular Fi_ii usando f_x1 com U_ii como x1
+    Fi_ii = subs(f_x1, x1, U_ii);
+    
+    % Cálculo do backward aproximada
+    back(i) = (Fi - Fi_i) / Dx(i);
+    fprintf("O valor de Backward%d é: %f\n", i, back(i));
+    
+    % Cálculo do forward aproximada
+    ford(i) = (Fi_ii - Fi) / Dx(i);
+    fprintf("O valor de Forward%d é: %f\n", i, ford(i));
+    
+    % Cálculo do operador de 2ª ordem centrado
+    g(i) = (Fi_ii - Fi_i) / (2 * Dx(i));
+    fprintf("O valor do operador de 2ª ordem centrado%d é: %f\n", i, g(i));
+    
+    % Calcular U_iii subtraindo 2*Dx(i) de U
+    U_iii = U - 2 * Dx(i);
+    
+    % Calcular Fi_iii usando f_x1 com U_iii como x1
+    Fi_iii = subs(f_x1, x1, U_iii);
+    
+    % Cálculo do operador de 2ª ordem
+    gg(i) = (3*Fi - 4*Fi_i + Fi_iii) / (2 * Dx(i));
+    fprintf("O valor do operador de 2ª ordem%d é: %f\n", i, gg(i));
+    
+    '---------------------------------------------------------------------------'
+end
+
+% Calcular a derivada exata da função específica em U
+derivada_exata = subs(dgf_x1, x1, U);
+
+% Calcular o erro percentual
+E = zeros(1, j);
+Er = zeros(1, j);
+Err = zeros(1, j);
+Erro = zeros(1, j);
+
+for i = 1:j
+    E(i) = abs((derivada_exata - back(i)) / derivada_exata) * 100;
+    fprintf("Erro percentual do Backward para Dx%d é: %f%%\n", i, E(i));
+    
+    Er(i) = abs((derivada_exata - ford(i)) / derivada_exata) * 100;
+    fprintf("Erro percentual do Forward para Dx%d é: %f%%\n", i, Er(i));
+    
+    Err(i) = abs((derivada_exata - g(i)) / derivada_exata) * 100;
+    fprintf("Erro percentual do operador de 2ª ordem centrado para Dx%d é: %f%%\n", i, Err(i));
+    
+    Erro(i) = abs((derivada_exata - gg(i)) / derivada_exata) * 100;
+    fprintf("Erro percentual do operador de 2ª ordem para Dx%d é: %f%%\n", i, Erro(i));
+    
+    '-----------------------------------------------------------------' ...
+    
+end
+
+% Plotar erro vs Dx
+figure;
+plot(Dx, E, 'r');
+hold on;
+plot(Dx, Er, 'b');
+plot(Dx, Err, 'm');
+plot(Dx, Erro, 'g');
+xlabel('Dx');
+ylabel('Erro percentual');
+title('Dx Vs Erro percentual');
+legend('Backward', 'Forward', '2ª ordem centrado', '2ª ordem');
+grid on;
